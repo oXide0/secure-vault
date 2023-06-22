@@ -1,0 +1,19 @@
+.modal__label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .label__part {
+        display: flex;
+        align-items: center;
+    }
+    .label__input {
+        background: none;
+        border: none;
+        color: #fff;
+        outline: none;
+        font-size: 17px;
+        &:focus {
+            border-bottom: 1px solid #525355;
+        }
+    }
+}
