@@ -4,16 +4,16 @@ import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import { useSelector } from 'react-redux';
-import BasicModal from '../Modal/Modal';
-import { useState } from 'react';
+import NoteModal from '../NoteModal/NoteModal';
+import { useState, memo } from 'react';
 
-function Note({ title, text, id, type }) {
+const Note = memo(function Note({ title, text, id, labelId, type }) {
 	const notesDisplayStyle = useSelector((state) => state.notes.displayStyle);
 	const [modalActive, setModalActive] = useState(false);
 
 	return (
 		<div>
-			<BasicModal noteId={id} type={type} active={modalActive} setActive={setModalActive} />
+			<NoteModal noteId={id} labelId={labelId} type={type} active={modalActive} setActive={setModalActive} />
 			<Card
 				sx={{
 					width: notesDisplayStyle === 'grid' ? 250 : 595,
@@ -43,6 +43,6 @@ function Note({ title, text, id, type }) {
 			</Card>
 		</div>
 	);
-}
+});
 
 export default Note;

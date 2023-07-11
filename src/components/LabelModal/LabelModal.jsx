@@ -7,9 +7,10 @@ import DoneIcon from '@mui/icons-material/Done';
 import { useDispatch, useSelector } from 'react-redux';
 import style from './LabelModal.module.scss';
 import Button from '@mui/material/Button';
-import { useState } from 'react';
-import { addLabel } from '../../../features/labels/labelsSlice';
-import Label from '../../Label/Label';
+import IconButton from '@mui/material/IconButton';
+import { memo, useState } from 'react';
+import { addLabel } from '../../features/labels/labelsSlice';
+import LabelInput from '../LabelInput/LabelInput';
 
 const boxStyle = {
 	position: 'absolute',
@@ -26,7 +27,7 @@ const boxStyle = {
 	p: 2,
 };
 
-function LabelModal({ active, setActive }) {
+const LabelModal = memo(function LabelModal({ active, setActive }) {
 	const handleClose = () => setActive(false);
 	const [labelTitle, setLabelTitle] = useState('');
 
@@ -72,13 +73,13 @@ function LabelModal({ active, setActive }) {
 								value={labelTitle}
 								onChange={(e) => setLabelTitle(e.target.value)}
 							/>
-							<Button variant='text' onClick={onAddLabelHandler}>
+							<IconButton variant='text' onClick={onAddLabelHandler}>
 								<DoneIcon sx={{ color: '#fff' }} />
-							</Button>
+							</IconButton>
 						</div>
 						<div className={style.modal__labels}>
 							{labelsData.map((l) => {
-								return <Label key={l.id} value={l.title} id={l.id} />;
+								return <LabelInput key={l.id} value={l.title} id={l.id} />;
 							})}
 						</div>
 						<div className={style.modal__footer}>
@@ -95,6 +96,6 @@ function LabelModal({ active, setActive }) {
 			</Modal>
 		</div>
 	);
-}
+});
 
 export default LabelModal;

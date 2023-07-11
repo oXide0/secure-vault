@@ -1,21 +1,27 @@
 import Header from '../../components/Header/Header';
 import NavBar from '../../components/NavBar/NavBar';
-import Note from '../../components/Note/Note';
+import NoteCard from '../../components/NoteCard/NoteCard';
 import { useSelector } from 'react-redux';
 
-function Trash() {
+function LabelPage({ label }) {
 	const notesDisplayStyle = useSelector((state) => state.notes.displayStyle);
-	const notes = useSelector((state) => state.notes.trashData);
 
 	return (
 		<div className='wrapper'>
-			<Header title='Archive' />
+			<Header title={label.title} />
 			<main className='main'>
 				<NavBar />
 				<section className='notes'>
 					<div className={notesDisplayStyle === 'grid' ? 'notes_field' : 'notes_field list'}>
-						{notes.map((n) => (
-							<Note key={n.id} id={n.id} title={n.title} text={n.text} type='trash' />
+						{label.notes.map((note) => (
+							<NoteCard
+								key={note.id}
+								labelId={label.id}
+								id={note.id}
+								title={note.title}
+								text={note.text}
+								type='label'
+							/>
 						))}
 					</div>
 				</section>
@@ -24,4 +30,4 @@ function Trash() {
 	);
 }
 
-export default Trash;
+export default LabelPage;
