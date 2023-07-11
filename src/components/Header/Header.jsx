@@ -3,15 +3,15 @@ import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined';
 import GridViewIcon from '@mui/icons-material/GridView';
 import ViewStreamOutlinedIcon from '@mui/icons-material/ViewStreamOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
-import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
 import Divider from '@mui/material/Divider';
 import { toggleMenu } from '../../features/menu/menuSlice';
 import { useSelector, useDispatch } from 'react-redux';
-import { useEffect } from 'react';
+import { memo, useEffect } from 'react';
 import { toggleDisplayStyle } from '../../features/notes/notesSlice';
 import { onChangeHandler } from '../../features/search/searchSlice';
 
-function Header({ title }) {
+const Header = memo(function Header({ title }) {
 	const notesDisplayStyle = useSelector((state) => state.notes.displayStyle);
 	const searchValue = useSelector((state) => state.search.value);
 	const dispatch = useDispatch();
@@ -29,9 +29,9 @@ function Header({ title }) {
 			<div>
 				<header className={style.header}>
 					<div className={style.header__part}>
-						<Button onClick={() => dispatch(toggleMenu())}>
+						<IconButton onClick={() => dispatch(toggleMenu())}>
 							<MenuOutlinedIcon sx={{ color: '#fff' }} />
-						</Button>
+						</IconButton>
 						<h1 className={style.header__title}>{title}</h1>
 						<div className={style.header__search}>
 							<input
@@ -41,20 +41,20 @@ function Header({ title }) {
 								value={searchValue}
 								onChange={(e) => onChangeSearchHandler(e)}
 							/>
-							<Button className={style.search__btn}>
+							<IconButton className={style.search__btn}>
 								<SearchOutlinedIcon sx={{ color: '#fff' }} />
-							</Button>
+							</IconButton>
 						</div>
 					</div>
 					<div className={style.header__part}>
 						{notesDisplayStyle === 'list' ? (
-							<Button onClick={() => dispatch(toggleDisplayStyle())}>
+							<IconButton onClick={() => dispatch(toggleDisplayStyle())}>
 								<GridViewIcon sx={{ color: '#fff' }} />
-							</Button>
+							</IconButton>
 						) : (
-							<Button onClick={() => dispatch(toggleDisplayStyle())}>
+							<IconButton onClick={() => dispatch(toggleDisplayStyle())}>
 								<ViewStreamOutlinedIcon sx={{ color: '#fff' }} />
-							</Button>
+							</IconButton>
 						)}
 					</div>
 				</header>
@@ -62,6 +62,6 @@ function Header({ title }) {
 			</div>
 		</header>
 	);
-}
+});
 
 export default Header;

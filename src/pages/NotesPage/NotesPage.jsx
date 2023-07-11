@@ -1,15 +1,15 @@
-import style from './Notes.module.scss';
+import style from './NotesPage.module.scss';
 import Header from '../../components/Header/Header';
 import NavBar from '../../components/NavBar/NavBar';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import { useMemo, useState } from 'react';
 import Button from '@mui/material/Button';
-import Note from '../../components/Note/Note';
+import NoteCard from '../../components/NoteCard/NoteCard';
 import { useSelector, useDispatch } from 'react-redux';
 import { addNote } from '../../features/notes/notesSlice';
-import TextArea from '../../components/UI/TextArea/TextArea';
+import TextArea from '../../components/TextArea/TextArea';
 
-function Notes() {
+function NotesPage() {
 	const [inputMode, setInputMode] = useState('compressed');
 	const [noteContent, setNoteContent] = useState({ title: '', text: '' });
 	const [error, setError] = useState(false);
@@ -120,7 +120,7 @@ function Notes() {
 					</div>
 					<div className={notesDisplayStyle === 'grid' ? 'notes_field' : 'notes_field list'}>
 						{searchNotes.map((n) => (
-							<Note key={n.id} id={n.id} title={n.title} text={n.text} type='notes' />
+							<NoteCard key={n.id} id={n.id} title={n.title} text={n.text} type='notes' />
 						))}
 					</div>
 				</section>
@@ -129,4 +129,4 @@ function Notes() {
 	);
 }
 
-export default Notes;
+export default NotesPage;

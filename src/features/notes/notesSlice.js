@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { v1 } from 'uuid';
+import { nanoid } from '@reduxjs/toolkit';
 
 const initialState = {
 	notesData: [],
@@ -14,13 +14,12 @@ export const notesSlice = createSlice({
 	reducers: {
 		addNote: (state, action) => {
 			state.notesData.push({
-				id: v1(),
+				id: nanoid(),
 				title: action.payload.title,
 				text: action.payload.text,
 			});
 		},
 		updateNote: (state, action) => {
-			// console.log(action.payload.id, action.payload.title, action.payload.text);
 			const notesArr = state.notesData;
 			notesArr.forEach((note) => {
 				if (note.id === action.payload.id) {
@@ -73,6 +72,9 @@ export const notesSlice = createSlice({
 			state.notesData.push(note);
 			state.trashData = state.trashData.filter((n) => n.id !== action.payload.id);
 		},
+		removeFromNotes: (state, action) => {
+			state.notesData = state.notesData.filter((n) => n.id !== action.payload.id);
+		},
 		toggleDisplayStyle: (state) => {
 			if (state.displayStyle === 'grid') {
 				state.displayStyle = 'list';
@@ -92,6 +94,7 @@ export const {
 	addTrashNote,
 	removeNote,
 	restoreNote,
+	removeFromNotes,
 	toggleDisplayStyle,
 } = notesSlice.actions;
 export default notesSlice.reducer;

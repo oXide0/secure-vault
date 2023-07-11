@@ -1,13 +1,13 @@
-import style from './Label.module.scss';
+import style from './LabelInput.module.scss';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import DoneIcon from '@mui/icons-material/Done';
-import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
 import { removeLabel, editLabel } from '../../features/labels/labelsSlice';
 import { useDispatch } from 'react-redux';
-import { useRef, useState } from 'react';
+import { memo, useRef, useState } from 'react';
 
-function Label({ value, id }) {
+const LabelInput = memo(function LabelInput({ value, id }) {
 	const dispatch = useDispatch();
 	const [labelTitle, setLabelTitle] = useState(value);
 	const textBoxRef = useRef(null);
@@ -43,20 +43,20 @@ function Label({ value, id }) {
 			/>
 			<div className={style.label__part}>
 				{isEditing ? (
-					<Button variant='text' sx={{ color: '#fff' }} onClick={onAddLabelHandler}>
+					<IconButton variant='text' sx={{ color: '#fff' }} onClick={onAddLabelHandler}>
 						<DoneIcon />
-					</Button>
+					</IconButton>
 				) : (
-					<Button variant='text' sx={{ color: '#fff' }} onClick={onClickHandler}>
+					<IconButton variant='text' sx={{ color: '#fff' }} onClick={onClickHandler}>
 						<EditIcon />
-					</Button>
+					</IconButton>
 				)}
-				<Button variant='text' sx={{ color: '#fff' }} onClick={() => onRemoveHandler(id)}>
+				<IconButton variant='text' sx={{ color: '#fff' }} onClick={() => onRemoveHandler(id)}>
 					<DeleteIcon />
-				</Button>
+				</IconButton>
 			</div>
 		</div>
 	);
-}
+});
 
-export default Label;
+export default LabelInput;

@@ -1,6 +1,7 @@
 import style from './TextArea.module.scss';
+import { memo } from 'react';
 
-function TextArea({ data, setData, placeholder = '' }) {
+const TextArea = memo(function TextArea({ data, setData, placeholder = '' }) {
 	function handleTextChange(event) {
 		setData({ ...data, text: event.target.value });
 	}
@@ -20,6 +21,6 @@ function TextArea({ data, setData, placeholder = '' }) {
 			rows='3'
 		/>
 	);
-}
+});
 
 export default TextArea;

@@ -1,12 +1,15 @@
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import { useSelector, useDispatch } from 'react-redux';
-import { useState } from 'react';
-import { Button } from '@mui/material';
-import style from './Modal.module.scss';
+import { useState, memo } from 'react';
+import { Button, IconButton } from '@mui/material';
+import style from './NoteModal.module.scss';
 import Divider from '@mui/material/Divider';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import DeleteIcon from '@mui/icons-material/Delete';
+import LabelIcon from '@mui/icons-material/Label';
+import DashBoard from '../DashBoard/DashBoard';
+import Tooltip from '@mui/material/Tooltip';
 import {
 	updateNote,
 	updateArchiveNote,
@@ -16,7 +19,8 @@ import {
 	removeNote,
 	restoreNote,
 } from '../../features/notes/notesSlice';
-import TextArea from '../UI/TextArea/TextArea';
+import { updateLabelNote, removeLabelNote } from '../../features/labels/labelsSlice';
+import TextArea from '../TextArea/TextArea';
 import Backdrop from '@mui/material/Backdrop';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
 
@@ -35,13 +39,19 @@ const boxStyle = {
 	p: 2,
 };
 
-function BasicModal({ noteId, type, active, setActive }) {
+const NoteModal = memo(function NoteModal({ noteId, labelId, type, active, setActive }) {
 	const notesData = useSelector((state) => state.notes.notesData);
 	const archiveData = useSelector((state) => state.notes.archiveData);
 	const trashData = useSelector((state) => state.notes.trashData);
 	const dispatch = useDispatch();
+	const [dashBoardActive, setDashBoardActive] = useState(false);
+	const labels = useSelector((state) => state.labels.labelsData);
 
 	let note;
+	if (type === 'label') {
+		const label = labels.find((label) => label.id === labelId);
+		note = label.notes.find((n) => n.id === noteId);
+	}
 	switch (type) {
 		case 'notes':
 			note = notesData.find((n) => n.id === noteId);
@@ -51,6 +61,8 @@ function BasicModal({ noteId, type, active, setActive }) {
 			break;
 		case 'trash':
 			note = trashData.find((n) => n.id === noteId);
+			break;
+		default:
 			break;
 	}
 	const [modalData, setModalData] = useState({ id: note.id, title: note.title, text: note.text });
@@ -62,6 +74,8 @@ function BasicModal({ noteId, type, active, setActive }) {
 	const onUpdateHandler = () => {
 		if (type === 'notes') {
 			dispatch(updateNote(modalData));
+		} else if (type === 'label') {
+			dispatch(updateLabelNote({ ...modalData, labelId }));
 		} else {
 			dispatch(updateArchiveNote(modalData));
 		}
@@ -81,6 +95,9 @@ function BasicModal({ noteId, type, active, setActive }) {
 	const onRemoveNoteHandler = () => {
 		if (type === 'trash') {
 			dispatch(removeNote({ id: noteId }));
+		} else if (type === 'label') {
+			dispatch(removeLabelNote({ labelId, noteId }));
+			setActive(false);
 		} else {
 			dispatch(addTrashNote({ id: noteId, type }));
 			setActive(false);
@@ -90,6 +107,14 @@ function BasicModal({ noteId, type, active, setActive }) {
 	const onRestoreHandler = () => {
 		dispatch(restoreNote({ id: noteId }));
 		setActive(false);
+	};
+
+	const setLabel = (e) => {
+		if (!labels.length) {
+			alert('You have no labels!');
+			return;
+		}
+		setDashBoardActive(e.currentTarget);
 	};
 
 	return (
@@ -123,24 +148,37 @@ function BasicModal({ noteId, type, active, setActive }) {
 					{type !== 'trash' ? (
 						<div>
 							{type === 'notes' ? (
-								<Button size='small' variant='text' onClick={onAddToArchiveHandler}>
-									<ArchiveIcon sx={{ color: '#fff' }} />
-								</Button>
-							) : (
-								<Button size='small' variant='text' onClick={onRemoveFromArchiveHandler}>
+								<>
+									<IconButton size='small' variant='text' onClick={onAddToArchiveHandler}>
+										<ArchiveIcon sx={{ color: '#fff' }} />
+									</IconButton>
+									<Tooltip title='Set label'>
+										<IconButton size='small' variant='text' onClick={setLabel}>
+											<LabelIcon sx={{ color: '#fff' }} />
+										</IconButton>
+									</Tooltip>
+									<DashBoard
+										active={dashBoardActive}
+										setActive={setDashBoardActive}
+										noteId={noteId}
+									/>
+								</>
+							) : type !== 'label' ? (
+								<IconButton size='small' variant='text' onClick={onRemoveFromArchiveHandler}>
 									<UnarchiveIcon sx={{ color: '#fff' }} />
-								</Button>
+								</IconButton>
+							) : (
+								''
 							)}
-
-							<Button size='small' variant='text' onClick={onRemoveNoteHandler}>
+							<IconButton size='small' variant='text' onClick={onRemoveNoteHandler}>
 								<DeleteIcon sx={{ color: '#fff' }} />
-							</Button>
+							</IconButton>
 						</div>
 					) : (
 						<div>
-							<Button size='small' variant='text' onClick={onRemoveNoteHandler}>
+							<IconButton size='small' variant='text' onClick={onRemoveNoteHandler}>
 								<DeleteIcon sx={{ color: '#fff' }} />
-							</Button>
+							</IconButton>
 						</div>
 					)}
 
@@ -178,6 +216,6 @@ function BasicModal({ noteId, type, active, setActive }) {
 			</Box>
 		</Modal>
 	);
-}
+});
 
-export default BasicModal;
+export default NoteModal;

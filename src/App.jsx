@@ -1,14 +1,22 @@
 import { Routes, Route } from 'react-router-dom';
-import Notes from './pages/Notes/Notes';
-import Archive from './pages/Archive/Archive';
-import Trash from './pages/Trash/Trash';
+import NotesPage from './pages/NotesPage/NotesPage';
+import ArchivePage from './pages/ArchivePage/ArchivePage';
+import TrashPage from './pages/TrashPage/TrashPage';
+import LabelPage from './pages/LabelPage/LabelPage';
+import { useSelector } from 'react-redux';
 
 function App() {
+	const labels = useSelector((state) => state.labels.labelsData);
+
 	return (
 		<Routes>
-			<Route path='/' element={<Notes />} />
-			<Route path='/archive' element={<Archive />} />
-			<Route path='/trash' element={<Trash />} />
+			<Route path='/' element={<NotesPage />} />
+			<Route path='/archive' element={<ArchivePage />} />
+			<Route path='/trash' element={<TrashPage />} />
+			{labels.map((label) => (
+				<Route key={label.id} path={'/' + label.id} element={<LabelPage label={label} />} />
+			))}
+			<Route path='*' element={<NotesPage />}></Route>
 		</Routes>
 	);
 }
