@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
 
 # Editor directories and files
 .vscode/*
@@ -23,11 +24,4 @@ dist-ssr
 *.sln
 *.sw?
 cdk.out
-
-
-!jest.config.js
-node_modules
-
-# CDK asset staging directory
 .cdk.staging
-cdk.out
