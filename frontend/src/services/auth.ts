@@ -1,8 +1,4 @@
-import {
-    signIn as amplifySignIn,
-    signUp as amplifySignUp,
-    fetchAuthSession,
-} from '@aws-amplify/auth';
+import { fetchAuthSession, signIn, signUp, confirmSignUp } from '@aws-amplify/auth';
 import { Amplify } from 'aws-amplify';
 import output from '../../../shared/output.json';
 
@@ -15,14 +11,15 @@ Amplify.configure({
     },
 });
 
-export const signUp = async (
-    username: string,
-    password: string,
-    email: string
-): Promise<string | undefined> => {
+interface AuthProps {
+    email: string;
+    password: string;
+}
+
+export const registerUser = async ({ email, password }: AuthProps): Promise<void> => {
     try {
-        await amplifySignUp({
-            username,
+        await signUp({
+            username: email,
             password,
             options: {
                 userAttributes: {
@@ -30,38 +27,43 @@ export const signUp = async (
                 },
             },
         });
-
-        const jwtToken = await getJwtToken();
-        if (!jwtToken) {
-            throw new Error('No JWT token found');
-        }
-        return jwtToken;
     } catch (error) {
         console.error(error);
     }
 };
 
-export const signIn = async (username: string, password: string) => {
+interface ConfirmProps {
+    email: string;
+    code: string;
+}
+
+export const confirmUserSignUp = async ({ email, code }: ConfirmProps): Promise<string> => {
+    await confirmSignUp({ username: email, confirmationCode: code });
+    const jwtToken = await getJwtToken();
+    console.log(jwtToken);
+    return jwtToken;
+};
+
+export const loginUser = async ({ email, password }: AuthProps) => {
     try {
-        await amplifySignIn({
-            username,
+        await signIn({
+            username: email,
             password,
-            options: {
-                authFlowType: 'USER_PASSWORD_AUTH',
-            },
         });
 
         const jwtToken = await getJwtToken();
-        if (!jwtToken) {
-            throw new Error('No JWT token found');
-        }
+        console.log(jwtToken);
         return jwtToken;
     } catch (error) {
         console.error(error);
+        throw new Error('Failed to login');
     }
 };
 
-const getJwtToken = async () => {
+export const getJwtToken = async (): Promise<string> => {
     const session = await fetchAuthSession();
-    return session.tokens?.idToken?.toString();
+    if (!session.tokens?.idToken) {
+        throw new Error('No JWT token found');
+    }
+    return session.tokens.idToken.toString();
 };
