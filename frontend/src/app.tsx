@@ -1,15 +1,20 @@
+import { Amplify } from 'aws-amplify';
 import { useEffect } from 'react';
-import Page from './page';
+import output from '../../shared/output.json';
 import './animation.css';
+import Page from './page';
 
 const App = () => {
-    // useEffect(() => {
-    //     const enteredPassword = prompt('Enter password');
-    //     if (enteredPassword !== 'pwd121519') {
-    //         alert('Incorrect password. Redirecting to blank page');
-    //         window.location.href = 'about:blank';
-    //     }
-    // }, []);
+    useEffect(() => {
+        Amplify.configure({
+            Auth: {
+                Cognito: {
+                    userPoolId: output['SecureVault-AuthStack'].SecureVaultUserPoolId,
+                    userPoolClientId: output['SecureVault-AuthStack'].SecureVaultUserPoolClientId,
+                },
+            },
+        });
+    }, []);
 
     return (
         <>

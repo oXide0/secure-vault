@@ -1,6 +1,6 @@
+import { confirmSignUp, signIn, signUp } from '@aws-amplify/auth';
 import {
     Box,
-    Typography,
     Button,
     CircularProgress,
     List,
@@ -8,11 +8,11 @@ import {
     ListItemText,
     Stack,
     TextField,
+    Typography,
 } from '@mui/material';
 import { useState } from 'react';
-import ModalWindow from './components/modal';
-import { confirmUserSignUp, loginUser, registerUser } from './services/auth';
 import { useForm } from 'react-hook-form';
+import ModalWindow from './components/modal';
 
 const Page = () => {
     const [files, setFiles] = useState([{ name: 'test.txt' }]);
@@ -102,7 +102,8 @@ interface ConfirmationFormValues {
 }
 
 const RegisterModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
-    const [registeredData, setRegisteredData] = useState({ isRegistered: false, email: '' });
+    const [userData, setUserData] = useState({ isRegistered: false, email: '' });
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
     const {
         register,
@@ -118,17 +119,33 @@ const RegisterModal = ({ open, onClose }: { open: boolean; onClose: () => void }
 
     const onRegisterSubmit = handleSubmit(async (data) => {
         const { email, password } = data;
-        await registerUser({ email, password });
-        setRegisteredData({ isRegistered: true, email });
+        try {
+            setSubmitError(null);
+            await signUp({
+                username: email,
+                password,
+                options: {
+                    userAttributes: {
+                        email,
+                    },
+                },
+            });
+        } catch (error) {
+            setSubmitError('Failed to register. Please check your credentials and try again.');
+            console.error(error);
+        }
+        setUserData({ isRegistered: true, email });
     });
 
     const onConfirmSubmit = handleSubmitConfirm(async (data) => {
         const { confirmationCode } = data;
-        const token = await confirmUserSignUp({
-            email: registeredData.email,
-            code: confirmationCode,
-        });
-        localStorage.setItem('token', token);
+        try {
+            setSubmitError(null);
+            await confirmSignUp({ username: userData.email, confirmationCode });
+        } catch (error) {
+            setSubmitError('Failed to confirm registration. Please check your code and try again.');
+            console.error(error);
+        }
         onClose();
     });
 
@@ -136,10 +153,10 @@ const RegisterModal = ({ open, onClose }: { open: boolean; onClose: () => void }
         <ModalWindow
             open={open}
             onClose={onClose}
-            title={registeredData.isRegistered ? 'Confirm your account' : 'Create new account'}
+            title={userData.isRegistered ? 'Confirm your account' : 'Create new account'}
             sx={{ maxWidth: '550px', width: '100%' }}
         >
-            {!registeredData.isRegistered ? (
+            {!userData.isRegistered ? (
                 <Box component='form' onSubmit={onRegisterSubmit}>
                     <Stack gap={2} py={8} flex='1 1 auto'>
                         <TextField
@@ -170,6 +187,11 @@ const RegisterModal = ({ open, onClose }: { open: boolean; onClose: () => void }
                             error={!!errors.password}
                             helperText={errors.password?.message as string}
                         />
+                        {submitError && (
+                            <Typography color='error' variant='body2'>
+                                {submitError}
+                            </Typography>
+                        )}
                     </Stack>
                     <Button
                         type='submit'
@@ -185,6 +207,7 @@ const RegisterModal = ({ open, onClose }: { open: boolean; onClose: () => void }
                 <Box component='form' onSubmit={onConfirmSubmit}>
                     <Stack gap={2} py={8} flex='1 1 auto'>
                         <TextField
+                            type='number'
                             label='Confirmation Code'
                             fullWidth
                             {...registerConfirm('confirmationCode', {
@@ -193,6 +216,11 @@ const RegisterModal = ({ open, onClose }: { open: boolean; onClose: () => void }
                             error={!!errorsConfirm.confirmationCode}
                             helperText={errorsConfirm.confirmationCode?.message as string}
                         />
+                        {submitError && (
+                            <Typography color='error' variant='body2'>
+                                {submitError}
+                            </Typography>
+                        )}
                     </Stack>
                     <Button
                         type='submit'
@@ -215,6 +243,8 @@ type LoginFormValues = {
 };
 
 const LoginModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
+    const [submitError, setSubmitError] = useState<string | null>(null);
+
     const {
         register,
         handleSubmit,
@@ -222,10 +252,17 @@ const LoginModal = ({ open, onClose }: { open: boolean; onClose: () => void }) =
     } = useForm<LoginFormValues>();
 
     const onSubmit = handleSubmit(async (data) => {
-        const token = await loginUser(data);
-        if (!token) return;
-        localStorage.setItem('token', token);
-        onClose();
+        try {
+            setSubmitError(null);
+            await signIn({
+                username: data.email,
+                password: data.password,
+            });
+            onClose();
+        } catch (error) {
+            setSubmitError('Failed to sign in. Please check your credentials and try again.');
+            console.error(error);
+        }
     });
 
     return (
@@ -255,6 +292,11 @@ const LoginModal = ({ open, onClose }: { open: boolean; onClose: () => void }) =
                         error={!!errors.password}
                         helperText={errors.password?.message as string}
                     />
+                    {submitError && (
+                        <Typography color='error' variant='body2'>
+                            {submitError}
+                        </Typography>
+                    )}
                 </Stack>
                 <Button type='submit' variant='contained' color='primary' fullWidth sx={{ mt: 2 }}>
                     Login
