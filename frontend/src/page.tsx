@@ -1,4 +1,4 @@
-import { confirmSignUp, signIn, signUp } from '@aws-amplify/auth';
+import { confirmSignUp, signIn, signUp, signOut, getCurrentUser } from '@aws-amplify/auth';
 import {
     Box,
     Button,
@@ -10,18 +10,17 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import ModalWindow from './components/modal';
 
-const Page = () => {
+const Page = ({ isAuth, setIsAuth }: { isAuth: boolean; setIsAuth: (value: boolean) => void }) => {
     const [files, setFiles] = useState([{ name: 'test.txt' }]);
     const [uploading, setUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState('');
     const [modalsState, setModalsState] = useState({ register: false, login: false });
-    const handleFileChange = (e) => {};
-    const isAuth = false;
 
+    const handleFileChange = (e) => {};
     const handleUpload = async () => {};
 
     return (
@@ -31,7 +30,14 @@ const Page = () => {
                     Secure<span style={{ color: '#1976d2' }}>Vault</span>
                 </Typography>
                 {isAuth ? (
-                    <Button variant='outlined' sx={{ color: 'white' }}>
+                    <Button
+                        variant='outlined'
+                        sx={{ color: 'white' }}
+                        onClick={async () => {
+                            await signOut();
+                            setIsAuth(false);
+                        }}
+                    >
                         Sign out
                     </Button>
                 ) : (
@@ -108,12 +114,14 @@ const RegisterModal = ({ open, onClose }: { open: boolean; onClose: () => void }
     const {
         register,
         handleSubmit,
+        reset,
         formState: { errors },
     } = useForm<RegisterFormValues>();
 
     const {
         register: registerConfirm,
         handleSubmit: handleSubmitConfirm,
+        reset: resetConfirm,
         formState: { errors: errorsConfirm },
     } = useForm<ConfirmationFormValues>();
 
@@ -146,6 +154,9 @@ const RegisterModal = ({ open, onClose }: { open: boolean; onClose: () => void }
             setSubmitError('Failed to confirm registration. Please check your code and try again.');
             console.error(error);
         }
+        setUserData({ isRegistered: false, email: '' });
+        reset();
+        resetConfirm();
         onClose();
     });
 

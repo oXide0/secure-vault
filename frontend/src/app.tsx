@@ -1,10 +1,13 @@
 import { Amplify } from 'aws-amplify';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import output from '../../shared/output.json';
 import './animation.css';
 import Page from './page';
+import { getCurrentUser } from '@aws-amplify/auth';
 
 const App = () => {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
     useEffect(() => {
         Amplify.configure({
             Auth: {
@@ -14,6 +17,16 @@ const App = () => {
                 },
             },
         });
+
+        async function checkAuth() {
+            try {
+                const user = await getCurrentUser();
+                setIsAuthenticated(!!user);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        checkAuth();
     }, []);
 
     return (
@@ -23,7 +36,7 @@ const App = () => {
                 <div className='line'></div>
                 <div className='line'></div>
             </div>
-            <Page />
+            <Page isAuth={isAuthenticated} setIsAuth={setIsAuthenticated} />
         </>
     );
 };
