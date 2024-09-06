@@ -1,4 +1,4 @@
-import { confirmSignUp, signIn, signUp, signOut, getCurrentUser } from '@aws-amplify/auth';
+import { confirmSignUp, signIn, signOut, signUp } from '@aws-amplify/auth';
 import {
     Box,
     Button,
@@ -12,16 +12,59 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import output from '../../shared/output.json';
+import { listFiles, uploadFile } from './api/data';
 import ModalWindow from './components/modal';
 
 const Page = ({ isAuth, setIsAuth }: { isAuth: boolean; setIsAuth: (value: boolean) => void }) => {
-    const [files, setFiles] = useState([{ name: 'test.txt' }]);
-    const [uploading, setUploading] = useState(false);
-    const [uploadStatus, setUploadStatus] = useState('');
+    const [files, setFiles] = useState<File[]>([]);
+    const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+    const [uploading, setUploading] = useState<boolean>(false);
+    const [uploadStatus, setUploadStatus] = useState<string>('');
     const [modalsState, setModalsState] = useState({ register: false, login: false });
 
-    const handleFileChange = (e) => {};
-    const handleUpload = async () => {};
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setFiles(Array.from(e.target.files));
+        }
+    };
+
+    const handleUpload = async () => {
+        if (!files.length) return;
+
+        setUploading(true);
+        setUploadStatus('');
+
+        try {
+            const uploadPromises = files.map(async (file) => {
+                const url = await uploadFile(file);
+                return `${file.name} uploaded successfully: ${url}`;
+            });
+
+            const uploadResults = await Promise.all(uploadPromises);
+            setUploadStatus(uploadResults.join('\n'));
+        } catch (error) {
+            setUploadStatus('Error uploading files');
+            console.error('Upload error:', error);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const fetchUploadedFiles = async () => {
+        try {
+            const files = await listFiles();
+            setUploadedFiles(files);
+        } catch (error) {
+            console.error('Error fetching files:', error);
+        }
+    };
+
+    useEffect(() => {
+        if (isAuth) {
+            fetchUploadedFiles();
+        }
+    }, [isAuth]);
 
     return (
         <Box sx={{ padding: 2, position: 'relative', zIndex: 3 }}>
@@ -69,7 +112,7 @@ const Page = ({ isAuth, setIsAuth }: { isAuth: boolean; setIsAuth: (value: boole
                 {uploading ? <CircularProgress size={24} /> : 'Upload'}
             </Button>
             {uploadStatus && (
-                <Typography variant='body1' color='textSecondary'>
+                <Typography variant='body1' color='error' fontWeight='bold'>
                     {uploadStatus}
                 </Typography>
             )}
@@ -83,11 +126,34 @@ const Page = ({ isAuth, setIsAuth }: { isAuth: boolean; setIsAuth: (value: boole
                     ))}
                 </List>
             </Box>
+            <Box>
+                <Typography variant='h6'>Uploaded Files:</Typography>
+                <List>
+                    {uploadedFiles.map((file) => (
+                        <ListItem key={file}>
+                            <ListItemText primary={file} />
+                            <Button
+                                variant='contained'
+                                onClick={() =>
+                                    window.open(
+                                        `https://${output['SecureVault-DataStack'].FilesBucketName}.s3.eu-north-1.amazonaws.com/${file}`,
+                                        '_blank'
+                                    )
+                                }
+                            >
+                                Download
+                            </Button>
+                        </ListItem>
+                    ))}
+                </List>
+            </Box>
             <RegisterModal
+                setIsAuth={setIsAuth}
                 open={modalsState.register}
                 onClose={() => setModalsState({ ...modalsState, register: false })}
             />
             <LoginModal
+                setIsAuth={setIsAuth}
                 open={modalsState.login}
                 onClose={() => setModalsState({ ...modalsState, login: false })}
             />
@@ -107,7 +173,13 @@ interface ConfirmationFormValues {
     confirmationCode: string;
 }
 
-const RegisterModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
+interface AuthModalProps {
+    open: boolean;
+    onClose: () => void;
+    setIsAuth: (value: boolean) => void;
+}
+
+const RegisterModal = ({ open, onClose, setIsAuth }: AuthModalProps) => {
     const [userData, setUserData] = useState({ isRegistered: false, email: '' });
     const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -155,6 +227,7 @@ const RegisterModal = ({ open, onClose }: { open: boolean; onClose: () => void }
             console.error(error);
         }
         setUserData({ isRegistered: false, email: '' });
+        setIsAuth(true);
         reset();
         resetConfirm();
         onClose();
@@ -253,7 +326,7 @@ type LoginFormValues = {
     password: string;
 };
 
-const LoginModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
+const LoginModal = ({ open, onClose, setIsAuth }: AuthModalProps) => {
     const [submitError, setSubmitError] = useState<string | null>(null);
 
     const {
@@ -269,6 +342,7 @@ const LoginModal = ({ open, onClose }: { open: boolean; onClose: () => void }) =
                 username: data.email,
                 password: data.password,
             });
+            setIsAuth(true);
             onClose();
         } catch (error) {
             setSubmitError('Failed to sign in. Please check your credentials and try again.');
