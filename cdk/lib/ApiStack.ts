@@ -42,7 +42,7 @@ export class ApiStack extends Stack {
             },
         };
 
-        const Resource = api.root.addResource('ApiResource', optionsWithCors);
+        const Resource = api.root.addResource('files', optionsWithCors);
         Resource.addMethod('GET', props.lambdaIntegration, optionsWithAuth);
         Resource.addMethod('POST', props.lambdaIntegration, optionsWithAuth);
         Resource.addMethod('PUT', props.lambdaIntegration, optionsWithAuth);

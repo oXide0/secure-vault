@@ -13,6 +13,7 @@ import {
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import output from '../../shared/output.json';
+import { api } from './api/axios';
 import { listFiles, uploadFile } from './api/data';
 import ModalWindow from './components/modal';
 
@@ -62,6 +63,15 @@ const Page = ({ isAuth, setIsAuth }: { isAuth: boolean; setIsAuth: (value: boole
 
     useEffect(() => {
         if (isAuth) {
+            const token = localStorage.getItem(
+                `CognitoIdentityServiceProvider.${output['SecureVault-AuthStack'].SecureVaultUserPoolClientId}.e00c09ec-40f1-70a9-9c92-0cbe43e43a6a.accessToken`
+            );
+            const files = api.get('', {
+                headers: {
+                    Authorization: token,
+                },
+            });
+            console.log(files);
             fetchUploadedFiles();
         }
     }, [isAuth]);
