@@ -2,7 +2,9 @@ import { confirmSignUp, signIn, signOut, signUp } from '@aws-amplify/auth';
 import {
     Box,
     Button,
+    Checkbox,
     CircularProgress,
+    FormControlLabel,
     List,
     ListItem,
     ListItemText,
@@ -14,7 +16,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import output from '../../shared/output.json';
 import { api } from './api/axios';
-import { listFiles, uploadFile } from './api/data';
+import { listFiles, uploadFile } from './api/bucket';
 import ModalWindow from './components/modal';
 
 const Page = ({ isAuth, setIsAuth }: { isAuth: boolean; setIsAuth: (value: boolean) => void }) => {
@@ -22,7 +24,11 @@ const Page = ({ isAuth, setIsAuth }: { isAuth: boolean; setIsAuth: (value: boole
     const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
     const [uploading, setUploading] = useState<boolean>(false);
     const [uploadStatus, setUploadStatus] = useState<string>('');
-    const [modalsState, setModalsState] = useState({ register: false, login: false });
+    const [modalsState, setModalsState] = useState({
+        register: false,
+        login: false,
+        upload: false,
+    });
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -56,6 +62,14 @@ const Page = ({ isAuth, setIsAuth }: { isAuth: boolean; setIsAuth: (value: boole
         try {
             const files = await listFiles();
             setUploadedFiles(files);
+            const data = await api.get('files', {
+                headers: {
+                    Authorization: localStorage.getItem(
+                        `CognitoIdentityServiceProvider.${output['SecureVault-AuthStack'].SecureVaultUserPoolClientId}.e00c09ec-40f1-70a9-9c92-0cbe43e43a6a.idToken`
+                    ),
+                },
+            });
+            console.log(data);
         } catch (error) {
             console.error('Error fetching files:', error);
         }
@@ -63,15 +77,6 @@ const Page = ({ isAuth, setIsAuth }: { isAuth: boolean; setIsAuth: (value: boole
 
     useEffect(() => {
         if (isAuth) {
-            const token = localStorage.getItem(
-                `CognitoIdentityServiceProvider.${output['SecureVault-AuthStack'].SecureVaultUserPoolClientId}.e00c09ec-40f1-70a9-9c92-0cbe43e43a6a.accessToken`
-            );
-            const files = api.get('', {
-                headers: {
-                    Authorization: token,
-                },
-            });
-            console.log(files);
             fetchUploadedFiles();
         }
     }, [isAuth]);
@@ -126,6 +131,15 @@ const Page = ({ isAuth, setIsAuth }: { isAuth: boolean; setIsAuth: (value: boole
                     {uploadStatus}
                 </Typography>
             )}
+            {/* <Stack direction='row'>
+                <Button
+                    variant='contained'
+                    color='primary'
+                    onClick={() => setModalsState({ ...modalsState, upload: true })}
+                >
+                    Upload File
+                </Button>
+            </Stack> */}
             <Box>
                 <Typography variant='h6'>Selected Files:</Typography>
                 <List>
@@ -142,6 +156,13 @@ const Page = ({ isAuth, setIsAuth }: { isAuth: boolean; setIsAuth: (value: boole
                     {uploadedFiles.map((file) => (
                         <ListItem key={file}>
                             <ListItemText primary={file} />
+                            {/* <Button
+                                variant='contained'
+                                sx={{ mr: 2, backgroundColor: 'yellow', color: '#171717' }}
+                                // onClick={() => toggleStar(file)}
+                            >
+                                Star
+                            </Button> */}
                             <Button
                                 variant='contained'
                                 onClick={() =>
@@ -166,6 +187,11 @@ const Page = ({ isAuth, setIsAuth }: { isAuth: boolean; setIsAuth: (value: boole
                 setIsAuth={setIsAuth}
                 open={modalsState.login}
                 onClose={() => setModalsState({ ...modalsState, login: false })}
+            />
+            <FileUploadModal
+                onFileSubmit={async () => {}}
+                open={modalsState.upload}
+                onClose={() => setModalsState({ ...modalsState, upload: false })}
             />
         </Box>
     );
@@ -395,6 +421,95 @@ const LoginModal = ({ open, onClose, setIsAuth }: AuthModalProps) => {
                 </Stack>
                 <Button type='submit' variant='contained' color='primary' fullWidth sx={{ mt: 2 }}>
                     Login
+                </Button>
+            </Box>
+        </ModalWindow>
+    );
+};
+
+interface FileUploadModalProps {
+    open: boolean;
+    onClose: () => void;
+    onFileSubmit: (data: FileUploadFormValues) => void;
+}
+
+interface FileUploadFormValues {
+    fileName: string;
+    starred: boolean;
+    file: FileList;
+}
+
+const FileUploadModal = ({ open, onClose, onFileSubmit }: FileUploadModalProps) => {
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        reset,
+    } = useForm<FileUploadFormValues>();
+
+    const onSubmit = handleSubmit(async (data) => {
+        if (!data.file || data.file.length === 0) {
+            setSubmitError('File is required.');
+            return;
+        }
+        try {
+            setSubmitError(null);
+            onFileSubmit(data);
+            onClose();
+            reset(); // Reset form after submission
+        } catch (error) {
+            setSubmitError('Failed to upload the file.');
+            console.error(error);
+        }
+    });
+
+    return (
+        <ModalWindow
+            open={open}
+            onClose={onClose}
+            title='Upload a new file'
+            sx={{ maxWidth: '600px', width: '100%' }}
+        >
+            <Box component='form' onSubmit={onSubmit}>
+                <Stack gap={2} py={8} flex='1 1 auto'>
+                    {/* File Name Field */}
+                    <TextField
+                        label='File Name'
+                        fullWidth
+                        {...register('fileName', { required: 'File name is required' })}
+                        error={!!errors.fileName}
+                        helperText={errors.fileName?.message as string}
+                    />
+
+                    {/* File Upload Input */}
+                    <input
+                        type='file'
+                        {...register('file', { required: 'File is required' })}
+                        style={{ marginBottom: '10px' }}
+                    />
+                    {errors.file && (
+                        <Typography color='error' variant='body2'>
+                            {errors.file.message}
+                        </Typography>
+                    )}
+
+                    {/* Starred Checkbox */}
+                    <FormControlLabel
+                        control={<Checkbox {...register('starred')} />}
+                        label='Star this file'
+                    />
+
+                    {/* Submit Error */}
+                    {submitError && (
+                        <Typography color='error' variant='body2'>
+                            {submitError}
+                        </Typography>
+                    )}
+                </Stack>
+
+                <Button type='submit' variant='contained' color='primary' fullWidth sx={{ mt: 2 }}>
+                    Upload File
                 </Button>
             </Box>
         </ModalWindow>
