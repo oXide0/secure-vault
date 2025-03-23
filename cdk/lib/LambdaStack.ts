@@ -21,7 +21,7 @@ export class LambdaStack extends Stack {
         const lambda = new NodejsFunction(this, 'MyFunction', {
             runtime: Runtime.NODEJS_20_X,
             handler: 'handler',
-            entry: join(__dirname, '..', 'services', 'handler.ts'),
+            entry: join(__dirname, '..', 'services', 'lambda', 'handler.ts'),
             timeout: Duration.seconds(30),
             functionName: `MyFunction-${getSuffixFromStack(this)}`,
             environment: {

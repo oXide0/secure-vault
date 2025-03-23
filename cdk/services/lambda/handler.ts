@@ -1,18 +1,10 @@
-import {
-    DynamoDBClient,
-    PutItemCommand,
-    ScanCommand,
-    UpdateItemCommand,
-} from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, PutItemCommand, ScanCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { randomUUID } from 'crypto';
-import { addCorsHeaders } from '../helpers';
+import { addCorsHeaders } from '../../helpers';
 
-export async function handler(
-    event: APIGatewayProxyEvent,
-    context: Context
-): Promise<APIGatewayProxyResult> {
+export async function handler(event: APIGatewayProxyEvent, context: Context): Promise<APIGatewayProxyResult> {
     const dbClient = new DynamoDBClient({});
     let response: APIGatewayProxyResult = {
         statusCode: 400,
